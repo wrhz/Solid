@@ -1,8 +1,9 @@
-package main
+package solid
 
 import (
-	"encoding/json"
 	"os"
+
+	"github.com/goccy/go-json"
 )
 
 type Server struct {
