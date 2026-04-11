@@ -2,10 +2,7 @@ module solid
 
 go 1.24.1
 
-require (
-	github.com/goccy/go-json v0.10.6
-	github.com/gogf/gf/v2 v2.10.0
-)
+require github.com/gogf/gf/v2 v2.10.0
 
 require (
 	github.com/BurntSushi/toml v1.5.0 // indirect

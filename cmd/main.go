@@ -3,28 +3,24 @@ package main
 import (
 	"fmt"
 	"net/http"
-	"solid/middleware"
-	"solid/route"
+	"solid/config"
 	"solid/solid"
 	"strconv"
 )
 
 func main() {
-	server, err := solid.GetServer()
-	if err != nil {
-		fmt.Println("Failed to read server config:", err)
-		return
-	}
+	server := config.ServerConfig()
 
 	serve := http.NewServeMux()
 
-	route.Routes()
+	route := solid.NewRoute()
 
-	middleware.Middleware()
+	server.MainStruct.RegisterMiddleware(route)
+
+	server.MainStruct.RegisterRoute(route)
 
 	for path, callFunc := range solid.GetRoutes() {
-		handler := solid.Chain(http.HandlerFunc(callFunc));
-		serve.Handle("GET " + path, handler)
+		serve.Handle("GET " + path, http.HandlerFunc(callFunc))
 	}
 
 	fmt.Println("Server starting on port:", server.Port)

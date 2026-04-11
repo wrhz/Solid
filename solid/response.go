@@ -10,46 +10,46 @@ import (
 )
 
 func StringResponse(c *Context, s string, status int) {
-	c.w.Header().Set("Content-Type", "text/plain")
-	c.w.WriteHeader(status)
+	c.Writer.Header().Set("Content-Type", "text/plain")
+	c.Writer.WriteHeader(status)
 
-	fmt.Fprintf(c.w, "%s", s)
+	fmt.Fprintf(c.Writer, "%s", s)
 }
 
 func JsonResponse(c *Context, data any, status int) {
 	var jsonData = gjson.New(data).MustToJsonString()
 
-	c.w.Header().Set("Content-Type", "application/json")
-	c.w.WriteHeader(status)
+	c.Writer.Header().Set("Content-Type", "application/json")
+	c.Writer.WriteHeader(status)
 
-	fmt.Fprintf(c.w, "%s", jsonData)
+	fmt.Fprintf(c.Writer, "%s", jsonData)
 }
 
 func HtmlResponse(c *Context, html string, status int) {
-	c.w.Header().Set("Content-Type", "text/html")
-	c.w.WriteHeader(status)
+	c.Writer.Header().Set("Content-Type", "text/html")
+	c.Writer.WriteHeader(status)
 
-	fmt.Fprintf(c.w, "%s", html)
+	fmt.Fprintf(c.Writer, "%s", html)
 }
 
 func HtmlFileResponse(c *Context, file string, status int) {
 	var html, err = os.ReadFile(filepath.Join(".", "resource", "view", file))
 	if err != nil {
-		c.w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintf(c.w, "Failed to read html file: %s", err)
+		c.Writer.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(c.Writer, "Failed to read html file: %s", err)
 		return
 	}
-	c.w.Header().Set("Content-Type", "text/html")
-	c.w.WriteHeader(status)
+	c.Writer.Header().Set("Content-Type", "text/html")
+	c.Writer.WriteHeader(status)
 
-	fmt.Fprintf(c.w, "%s", html)
+	fmt.Fprintf(c.Writer, "%s", html)
 }
 
 func XmlResponse(c *Context, data any, status int) {
 	var xmlData = gjson.New(data).MustToXmlString()
 
-	c.w.Header().Set("Content-Type", "application/xml")
-	c.w.WriteHeader(status)
+	c.Writer.Header().Set("Content-Type", "application/xml")
+	c.Writer.WriteHeader(status)
 
-	fmt.Fprintf(c.w, "%s", xmlData)
+	fmt.Fprintf(c.Writer, "%s", xmlData)
 }

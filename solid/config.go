@@ -1,24 +1,21 @@
 package solid
 
-import (
-	"os"
-
-	"github.com/goccy/go-json"
-)
-
-type Server struct {
-	Port int `json:"port"`
+type ServerConfigStruct struct {
+	Port int
+	MainStruct SolidRoute
 }
 
-func GetServer() (*Server, error) {
-	var data, err = os.ReadFile("config/server.json")
-	if err != nil {
-		return nil, err
+func NewServerConfig() *ServerConfigStruct {
+	return &ServerConfigStruct{
+		Port: 8000,
+		MainStruct: nil,
 	}
-	var server Server
-	err = json.Unmarshal(data, &server)
-	if err != nil {
-		return nil, err
-	}
-	return &server, nil
+}
+
+func (s *ServerConfigStruct) SetPort(port int) {
+	s.Port = port
+}
+
+func (s *ServerConfigStruct) SetMainStruct(mainStruct SolidRoute) {
+	s.MainStruct = mainStruct
 }
