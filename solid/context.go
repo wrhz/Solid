@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/goccy/go-reflect"
+	"github.com/gorilla/mux"
 )
 
 type Context struct {
@@ -82,5 +83,40 @@ func (c *Context) BindQuery(s any) error {
 			}
 		}
 	}
+	return nil
+}
+
+func (c *Context) BindParams(s any) error {
+	v := reflect.ValueOf(s)
+
+	if v.Kind() == reflect.Ptr {
+		v = v.Elem()
+	}
+
+	if v.Kind() != reflect.Struct {
+		return fmt.Errorf("BindParams: expected struct, got %v", v.Kind())
+	}
+
+	params := mux.Vars(c.Request)
+
+	for i := 0; i < v.NumField(); i++ {
+		field := v.Type().Field(i)
+		pramTag := field.Tag.Get("param")
+
+		if pramTag != "" {
+			data := params[pramTag]
+
+			paramType := field.Type.Kind()
+
+			value, err := parseType(data, paramType)
+
+			if err != nil {
+				return fmt.Errorf("parse field %q as %v: %w", pramTag, paramType, err)
+			}
+
+			v.Field(i).Set(reflect.ValueOf(value))
+		}
+	}
+
 	return nil
 }

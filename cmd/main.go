@@ -6,12 +6,14 @@ import (
 	"solid/config"
 	"solid/solid"
 	"strconv"
+
+	"github.com/gorilla/mux"
 )
 
 func main() {
 	server := config.ServerConfig()
 
-	serve := http.NewServeMux()
+	serve := mux.NewRouter()
 
 	route := solid.NewRoute()
 
@@ -20,7 +22,7 @@ func main() {
 	server.MainStruct.RegisterRoute(route)
 
 	for path, callFunc := range solid.GetRoutes() {
-		serve.Handle("GET " + path, http.HandlerFunc(callFunc))
+		serve.HandleFunc(path, callFunc).Methods("GET")
 	}
 
 	fmt.Println("Server starting on port:", server.Port)
