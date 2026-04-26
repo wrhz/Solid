@@ -236,7 +236,7 @@ func (c *Context) BindJson(s any) error {
         return fmt.Errorf("Failed to read: %w", err)
     }
 
-	if err := json.Unmarshal(bodyBytes, &s); err != nil {
+	if err := json.Unmarshal(bodyBytes, s); err != nil {
 		return fmt.Errorf("Failed to unmarshal: %w", err)
 	}
 
@@ -252,7 +252,7 @@ func (c *Context) BindXml(s any) error {
 		return fmt.Errorf("Failed to read: %w", err)
 	}
 
-	if err := xml.Unmarshal(bodyBytes, &s); err != nil {
+	if err := xml.Unmarshal(bodyBytes, s); err != nil {
 		return fmt.Errorf("Failed to unmarshal: %w", err)
 	}
 
