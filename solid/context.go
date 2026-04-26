@@ -1,9 +1,12 @@
 package solid
 
 import (
+	"errors"
 	"fmt"
+	"mime/multipart"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/goccy/go-reflect"
 	"github.com/gorilla/mux"
@@ -27,6 +30,10 @@ func parseType (value string, targetType reflect.Kind) (any, error) {
 		r, err = strconv.ParseFloat(value, 64)
 	case reflect.Bool:
 		r, err = strconv.ParseBool(value)
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		r, err = strconv.ParseUint(value, 10, 64)
+	case reflect.TypeOf(time.Time{}).Kind():
+		r, err = time.Parse(time.RFC3339, value)
 	default:
 		err = fmt.Errorf("unsupported type: %v", targetType)
 	}
@@ -115,6 +122,102 @@ func (c *Context) BindParams(s any) error {
 			}
 
 			v.Field(i).Set(reflect.ValueOf(value))
+		}
+	}
+
+	return nil
+}
+
+func (c *Context) BindForm(s any) error {
+	if err := c.Request.ParseForm(); err != nil {
+		return fmt.Errorf("parse form: %w", err)
+	}
+
+	v := reflect.ValueOf(s)
+
+	if v.Kind() == reflect.Ptr {
+		v = v.Elem()
+	}
+
+	if v.Kind() != reflect.Struct {
+		return fmt.Errorf("BindParams: expected struct, got %v", v.Kind())
+	}
+
+	for i := 0; i < v.NumField(); i++ {
+		field := v.Type().Field(i)
+		formTag := field.Tag.Get("form")
+
+		if formTag != "" {
+			paramType := field.Type
+
+			if paramType == reflect.TypeOf(multipart.FileHeader{}) {
+				files := c.Request.MultipartForm.File[formTag]
+
+				if len(files) == 0 {
+					continue
+				}
+
+				fh := files[0]
+				if paramType == reflect.TypeOf(multipart.FileHeader{}) {
+					v.Field(i).Set(reflect.ValueOf(*fh))
+				} else if paramType == reflect.TypeOf((*multipart.FileHeader)(nil)) {
+					v.Field(i).Set(reflect.ValueOf(fh))
+				} else {
+					return errors.New("unsupported file field type")
+				}
+			} else if paramType == reflect.TypeOf([]multipart.FileHeader{}) {
+				files := c.Request.MultipartForm.File[formTag]
+
+				sliceValue := reflect.MakeSlice(paramType, 0, len(files))
+
+				for _, fh := range files {
+					if paramType.Elem() == reflect.TypeOf(multipart.FileHeader{}) {
+						sliceValue = reflect.Append(sliceValue, reflect.ValueOf(*fh))
+					} else if paramType.Elem() == reflect.TypeOf((*multipart.FileHeader)(nil)) {
+						sliceValue = reflect.Append(sliceValue, reflect.ValueOf(fh))
+					} else {
+						return errors.New("unsupported file slice field type")
+					}
+				}
+
+				v.Field(i).Set(sliceValue)
+			} else {
+				data := c.Request.Form[formTag]
+				paramTypeKind := paramType.Kind()
+
+				if paramTypeKind == reflect.Slice {
+					elementType := field.Type.Elem().Kind()
+
+					sliceValue := reflect.MakeSlice(field.Type, 0, len(data))
+
+					for _, valStr := range data {
+						
+						elemValue, err := parseType(valStr, elementType)
+
+						if err != nil {
+							return fmt.Errorf("parse slice element %q as %v: %w", valStr, elementType, err)
+						}
+
+						sliceValue = reflect.Append(sliceValue, reflect.ValueOf(elemValue))
+					}
+
+					v.Field(i).Set(sliceValue)
+				} else {
+					if len(data) == 0 {
+						continue
+					}
+
+					value, err := parseType(data[0], paramTypeKind)
+
+					if err != nil {
+						return fmt.Errorf("parse field %q as %v: %w", formTag, paramType, err)
+					}
+
+					v.Field(i).Set(reflect.ValueOf(value))
+				}
+			}
+		} else {
+			return fmt.Errorf("field %q does not have form tag", field.Name)
 		}
 	}
 

@@ -1,30 +1,26 @@
 package route
 
-import "solid/solid"
+import (
+	"mime/multipart"
+	"solid/solid"
+)
 
-type HelloURLArgs struct {
-	Id int `param:"id"`
+type FormData struct {
+	Files []multipart.FileHeader `form:"file"`
 }
 
-type Hello struct {}
+type Hello struct{}
 
 func (h *Hello) RegisterRoute(r *solid.RouteStruct) {
-	r.Get("/hello/{id:[0-9]+}", h.helloFunc)
+	r.Get("/hello", h.helloFuncGet)
 }
 
 func (h *Hello) RegisterMiddleware(r *solid.RouteStruct) {
-	
+
 }
 
-func (h *Hello) helloFunc(c *solid.Context) {
-	var args HelloURLArgs
-
-	if c.BindParams(&args) != nil {
-		solid.JsonResponse(c, map[string]string{"error": "invalid parameters"}, 500)
-		return
-	}
-
-	solid.JsonResponse(c, args, 200)
+func (h *Hello) helloFuncGet(c *solid.Context) {
+	solid.ViewResponse(c, "index.html", 200)
 }
 
 func NewHello() *Hello {

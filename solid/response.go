@@ -16,6 +16,13 @@ func StringResponse(c *Context, s string, status int) {
 	fmt.Fprintf(c.Writer, "%s", s)
 }
 
+func BytesResponse(c *Context, data []byte, status int) {
+	c.Writer.Header().Set("Content-Type", "application/octet-stream")
+	c.Writer.WriteHeader(status)
+
+	c.Writer.Write(data)
+}
+
 func JsonResponse(c *Context, data any, status int) {
 	var jsonData = gjson.New(data).MustToJsonString()
 
@@ -32,7 +39,7 @@ func HtmlResponse(c *Context, html string, status int) {
 	fmt.Fprintf(c.Writer, "%s", html)
 }
 
-func HtmlFileResponse(c *Context, file string, status int) {
+func ViewResponse(c *Context, file string, status int) {
 	var html, err = os.ReadFile(filepath.Join(".", "resource", "view", file))
 	if err != nil {
 		c.Writer.WriteHeader(http.StatusInternalServerError)
