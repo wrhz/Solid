@@ -1,6 +1,7 @@
 package solid
 
 import (
+	"encoding/xml"
 	"fmt"
 	"net/http"
 	"os"
@@ -53,7 +54,13 @@ func ViewResponse(c *Context, file string, status int) {
 }
 
 func XmlResponse(c *Context, data any, status int) {
-	var xmlData = gjson.New(data).MustToXmlString()
+	var xmlData, err = xml.Marshal(data)
+	
+	if err != nil {
+		c.Writer.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(c.Writer, "Failed to marshal xml: %s", err)
+		return
+	}
 
 	c.Writer.Header().Set("Content-Type", "application/xml")
 	c.Writer.WriteHeader(status)

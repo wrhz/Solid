@@ -1,13 +1,16 @@
 package solid
 
 import (
+	"encoding/xml"
 	"errors"
 	"fmt"
+	"io"
 	"mime/multipart"
 	"net/http"
 	"strconv"
 	"time"
 
+	"github.com/goccy/go-json"
 	"github.com/goccy/go-reflect"
 	"github.com/gorilla/mux"
 )
@@ -219,6 +222,38 @@ func (c *Context) BindForm(s any) error {
 		} else {
 			return fmt.Errorf("field %q does not have form tag", field.Name)
 		}
+	}
+
+	return nil
+}
+
+func (c *Context) BindJson(s any) error {
+	defer c.Request.Body.Close()
+
+    bodyBytes, err := io.ReadAll(c.Request.Body)
+
+    if err != nil {
+        return fmt.Errorf("Failed to read: %w", err)
+    }
+
+	if err := json.Unmarshal(bodyBytes, &s); err != nil {
+		return fmt.Errorf("Failed to unmarshal: %w", err)
+	}
+
+	return nil
+}
+
+func (c *Context) BindXml(s any) error {
+	defer c.Request.Body.Close()
+
+	bodyBytes, err := io.ReadAll(c.Request.Body)
+
+	if err != nil {
+		return fmt.Errorf("Failed to read: %w", err)
+	}
+
+	if err := xml.Unmarshal(bodyBytes, &s); err != nil {
+		return fmt.Errorf("Failed to unmarshal: %w", err)
 	}
 
 	return nil

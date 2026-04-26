@@ -1,13 +1,8 @@
 package route
 
 import (
-	"mime/multipart"
 	"solid/solid"
 )
-
-type FormData struct {
-	Files []multipart.FileHeader `form:"file"`
-}
 
 type Hello struct{}
 
