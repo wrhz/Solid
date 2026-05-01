@@ -5,6 +5,10 @@ import (
 	"solid/solid"
 )
 
+type CookieData struct {
+	Message int `cookie:"message"`
+}
+
 type Hello struct{}
 
 func (h *Hello) RegisterRoute(r *solid.RouteStruct) {
@@ -16,25 +20,16 @@ func (h *Hello) RegisterMiddleware(r *solid.RouteStruct) {
 }
 
 func (h *Hello) helloFuncGet(c *solid.Context) {
-	session, err := c.Session("test-session")
-	if err != nil {
-		fmt.Println("Error:", err)
-		return
-	}
+	var cookie CookieData
+	if err := c.BindCookie(&cookie); err == nil {
+		fmt.Println("Cookie message:", cookie.Message)
 
-	message := session.GetSession("message")
-
-	if message == nil {
-		err := session.SetSession("message", "Hello, World!")
-		if err != nil {
-			fmt.Println("Error setting session:", err)
-			return
+		cookie.Message++
+		if err := c.SaveCookie(&cookie); err != nil {
+			fmt.Println("Failed to save cookie:", err)
 		}
-		fmt.Println("Session message: nil")
-	} else {
-		fmt.Println("Session message:", message)
 	}
-	
+
 	solid.ViewResponse(c, "index.html", 200)
 }
 
