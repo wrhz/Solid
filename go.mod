@@ -14,6 +14,8 @@ require (
 	github.com/emirpasic/gods/v2 v2.0.0-alpha // indirect
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
 	github.com/goccy/go-json v0.10.6 // indirect
+	github.com/gorilla/securecookie v1.1.2 // indirect
+	github.com/gorilla/sessions v1.4.0 // indirect
 	github.com/magiconair/properties v1.8.10 // indirect
 	go.opentelemetry.io/otel v1.38.0 // indirect
 	go.opentelemetry.io/otel/trace v1.38.0 // indirect

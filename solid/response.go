@@ -55,7 +55,7 @@ func ViewResponse(c *Context, file string, status int) {
 
 func XmlResponse(c *Context, data any, status int) {
 	var xmlData, err = xml.Marshal(data)
-	
+
 	if err != nil {
 		c.Writer.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintf(c.Writer, "Failed to marshal xml: %s", err)
@@ -66,4 +66,38 @@ func XmlResponse(c *Context, data any, status int) {
 	c.Writer.WriteHeader(status)
 
 	fmt.Fprintf(c.Writer, "%s", xmlData)
+}
+
+func (c *Context) Redirect(url string, status int) {
+	http.Redirect(c.Writer, c.Request, url, status)
+}
+
+func (c *Context) NoContent() {
+	c.Writer.WriteHeader(http.StatusNoContent)
+}
+
+func (c *Context) File(filePath string) {
+	http.ServeFile(c.Writer, c.Request, filePath)
+}
+
+func (c *Context) Download(filePath string, fileName string) {
+	c.Writer.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", fileName))
+	http.ServeFile(c.Writer, c.Request, filePath)
+}
+
+func (c *Context) Stream(streamFunc func(w http.ResponseWriter)) {
+	c.Writer.Header().Set("Content-Type", "application/octet-stream")
+	c.Writer.WriteHeader(http.StatusOK)
+	streamFunc(c.Writer)
+}
+
+func (c *Context) Error(status int, err error) {
+	c.Writer.WriteHeader(status)
+	fmt.Fprintf(c.Writer, "%s", err.Error())
+}
+
+func (c *Context) JSONError(status int, err error) {
+	c.Writer.Header().Set("Content-Type", "application/json")
+	
+	JsonResponse(c, map[string]error{ "error": err }, status)
 }

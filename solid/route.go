@@ -1,13 +1,10 @@
 package solid
 
 import (
-	// "fmt"
 	"fmt"
 	"net/http"
 	"strings"
 	"time"
-	// "strings"
-	// "time"
 )
 
 type RouteStruct struct {
@@ -77,6 +74,7 @@ func (r *RouteStruct) chain(handler http.Handler) http.Handler {
 		}()
 
 		settings := GetSettingsConfig()
+
 
 		if strings.Contains(r.Header.Get("Content-Type"), "multipart/form-data") {
 			err := r.ParseMultipartForm(settings.GetMultipartFormMaxMemory())
