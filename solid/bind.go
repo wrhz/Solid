@@ -278,7 +278,7 @@ func (c *Context) BindCookie(s any) error {
 		cookieTag := field.Tag.Get("cookie")
 
 		if cookieTag != "" {
-			cookie, err := c.GetCookie(cookieTag)
+			cookie, _, err := c.GetCookie(cookieTag)
 			if err != nil {
 				return fmt.Errorf("failed to get cookie %q: %w", cookieTag, err)
 			}

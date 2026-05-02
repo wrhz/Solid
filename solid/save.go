@@ -2,10 +2,11 @@ package solid
 
 import (
 	"fmt"
-	"reflect"
+
+	"github.com/goccy/go-reflect"
 )
 
-func (c *Context) SaveCookie(s any) error {
+func (c *Context) SaveCookie(s any, option *CookieOption) error {
 	v := reflect.ValueOf(s)
 
 	if v.Kind() == reflect.Ptr {
@@ -24,7 +25,7 @@ func (c *Context) SaveCookie(s any) error {
 			c.SetCookie(&Cookie{
 				Name: cookieTag,
 				Value: fmt.Sprintf("%v", v.Field(i).Interface()),
-			})
+			}, option)
 		}
 	}
 

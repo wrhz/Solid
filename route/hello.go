@@ -25,7 +25,7 @@ func (h *Hello) helloFuncGet(c *solid.Context) {
 		fmt.Println("Cookie message:", cookie.Message)
 
 		cookie.Message++
-		if err := c.SaveCookie(&cookie); err != nil {
+		if err := c.SaveCookie(&cookie, &solid.CookieOption{}); err != nil {
 			fmt.Println("Failed to save cookie:", err)
 		}
 	}
