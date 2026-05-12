@@ -74,3 +74,11 @@ func (c *Context) GetCookie(name string) (*Cookie, *CookieOption, error) {
 
 	return cookies, options, nil
 }
+
+func (c *Context) RemoveCookie(name string) {
+	http.SetCookie(c.Writer, &http.Cookie{
+		Name:   name,
+		Value:  "",
+		MaxAge: -1,
+	})
+}

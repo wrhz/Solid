@@ -296,3 +296,31 @@ func (c *Context) BindCookie(s any) error {
 
 	return nil
 }
+
+func (c *Context) BindSession(s any, name string) error {
+	v := reflect.ValueOf(s)
+
+	if v.Kind() == reflect.Ptr {
+		v = v.Elem()
+	}
+
+	if v.Kind() != reflect.Struct {
+		return fmt.Errorf("BindSession: expected struct, got %v", v.Kind())
+	}
+
+	session, err := c.Session(name, &SessionOptions{})
+	if err != nil {
+		return fmt.Errorf("failed to get session: %w", err)
+	}
+
+	for i := 0; i < v.NumField(); i++ {
+		field := v.Type().Field(i)
+		sessionTag := field.Tag.Get("session")
+
+		if sessionTag != "" {
+			v.Field(i).Set(reflect.ValueOf(session.Get(sessionTag)))
+		}
+	}
+
+	return nil
+}
