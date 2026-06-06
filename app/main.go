@@ -43,7 +43,26 @@ func main() {
 	wrappedHandler := gziphandler.GzipHandler(serve)
 
 	fmt.Println("Server starting on port:", serverConfig.GetPort())
-	if err := http.ListenAndServe(":"+strconv.Itoa(serverConfig.GetPort()), wrappedHandler); err != nil {
+
+	server := &http.Server{
+		Addr:    ":" + strconv.Itoa(serverConfig.GetPort()),
+		Handler: wrappedHandler,
+	}
+
+	if tlsConfig := solid.GetServerConfig().GetTLSConfig(); tlsConfig != nil {
+		server.TLSConfig = tlsConfig
+	}
+
+	if certFile := solid.GetServerConfig().GetTLSCertFile(); certFile != "" {
+		keyFile := solid.GetServerConfig().GetTLSKeyFile()
+
+		if err := server.ListenAndServeTLS(certFile, keyFile); err != nil {
+			fmt.Println("Server failed:", err)
+		}
+		return
+	}
+
+	if err := server.ListenAndServe(); err != nil {
 		fmt.Println("Server failed:", err)
 	}
 }

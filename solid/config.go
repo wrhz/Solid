@@ -1,6 +1,7 @@
 package solid
 
 import (
+	"crypto/tls"
 	"os"
 	"strconv"
 
@@ -11,12 +12,18 @@ var serverConfig = NewServerConfig()
 var settings = NewSettingsConfig()
 
 type ServerConfigStruct struct {
+	host       string
 	port       int
 	mainStruct SolidRoute
+
+	tlsCertFile string
+	tlsKeyFile  string
+	tlsConfig	*tls.Config
 }
 
 func NewServerConfig() *ServerConfigStruct {
 	return &ServerConfigStruct{
+		host:       "localhost",
 		port:       8000,
 		mainStruct: nil,
 	}
@@ -26,16 +33,48 @@ func (s *ServerConfigStruct) SetPort(port int) {
 	s.port = port
 }
 
-func (s *ServerConfigStruct) GetPort() int {
-	return s.port
+func (s *ServerConfigStruct) SetHost(host string) {
+	s.host = host
 }
 
 func (s *ServerConfigStruct) SetMainStruct(mainStruct SolidRoute) {
 	s.mainStruct = mainStruct
 }
 
+func (s *ServerConfigStruct) SetTLSCertFile(certFile string) {
+	s.tlsCertFile = certFile
+}
+
+func (s *ServerConfigStruct) SetTLSKeyFile(keyFile string) {
+	s.tlsKeyFile = keyFile
+}
+
+func (s *ServerConfigStruct) SetTLSConfig(tlsConfig *tls.Config) {
+	s.tlsConfig = tlsConfig
+}
+
+func (s *ServerConfigStruct) GetPort() int {
+	return s.port
+}
+
+func (s *ServerConfigStruct) GetHost() string {
+	return s.host
+}
+
 func (s *ServerConfigStruct) GetMainStruct() SolidRoute {
 	return s.mainStruct
+}
+
+func (s *ServerConfigStruct) GetTLSCertFile() string {
+	return s.tlsCertFile
+}
+
+func (s *ServerConfigStruct) GetTLSKeyFile() string {
+	return s.tlsKeyFile
+}
+
+func (s *ServerConfigStruct) GetTLSConfig() *tls.Config {
+	return s.tlsConfig
 }
 
 func GetServerConfig() *ServerConfigStruct {
