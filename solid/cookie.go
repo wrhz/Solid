@@ -11,11 +11,11 @@ type Cookie struct {
 }
 
 type CookieOption struct {
-	Quoted bool
-	Path       string
-	Domain     string
-	Expires    time.Time
-	RawExpires string
+	Quoted      bool
+	Path        string
+	Domain      string
+	Expires     time.Time
+	RawExpires  string
 	MaxAge      int
 	Secure      bool
 	HttpOnly    bool

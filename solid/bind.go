@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/goccy/go-json"
 	"github.com/goccy/go-reflect"
 	"github.com/gorilla/mux"
@@ -322,5 +323,15 @@ func (c *Context) BindSession(s any, name string) error {
 		}
 	}
 
+	return nil
+}
+
+func (c *Context) Validate(s any) error {
+	validator := validator.New()
+
+	if err := validator.Struct(s); err != nil {
+		return fmt.Errorf("validation failed: %w", err)
+	}
+	
 	return nil
 }
