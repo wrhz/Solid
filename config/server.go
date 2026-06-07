@@ -12,6 +12,6 @@ func ServerConfig() {
 
     server.SetMainStruct(route.NewHello())
 
-    server.SetTLSCertFile("cert.pem")
-	server.SetTLSKeyFile("key.pem")
+    // server.SetTLSCertFile("cert.pem")
+	// server.SetTLSKeyFile("key.pem")
 }

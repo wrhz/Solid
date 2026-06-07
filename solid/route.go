@@ -24,6 +24,12 @@ type SolidRoute interface {
 
 var getRoutes = map[string]func(w http.ResponseWriter, r *http.Request){}
 var postRoutes = map[string]func(w http.ResponseWriter, r *http.Request){}
+var patchRoutes = map[string]func(w http.ResponseWriter, r *http.Request){}
+var deleteRoutes = map[string]func(w http.ResponseWriter, r *http.Request){}
+var putRoutes = map[string]func(w http.ResponseWriter, r *http.Request){}
+var optionsRoutes = map[string]func(w http.ResponseWriter, r *http.Request){}
+var headRoutes = map[string]func(w http.ResponseWriter, r *http.Request){}
+var websocketRoutes = map[string]func(w http.ResponseWriter, r *http.Request){}
 
 func GetRoutes() map[string]func(w http.ResponseWriter, r *http.Request) {
 	return getRoutes
@@ -33,19 +39,98 @@ func PostRoutes() map[string]func(w http.ResponseWriter, r *http.Request) {
 	return postRoutes
 }
 
+func PatchRoutes() map[string]func(w http.ResponseWriter, r *http.Request) {
+	return patchRoutes
+}
+
+func DeleteRoutes() map[string]func(w http.ResponseWriter, r *http.Request) {
+	return deleteRoutes
+}
+
+func PutRoutes() map[string]func(w http.ResponseWriter, r *http.Request) {
+	return putRoutes
+}
+
+func OptionsRoutes() map[string]func(w http.ResponseWriter, r *http.Request) {
+	return optionsRoutes
+}
+
+func HeadRoutes() map[string]func(w http.ResponseWriter, r *http.Request) {
+	return headRoutes
+}
+
+func WebsocketRoutes() map[string]func(w http.ResponseWriter, r *http.Request) {
+	return websocketRoutes
+}
+
 func NewRoute() *RouteStruct {
 	return &RouteStruct{perfix: ""}
 }
 
 func (r *RouteStruct) Get(path string, callFunc func(c *Context)) {
-	getRoutes[r.perfix+path] = r.chain(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+	getRoutes[r.perfix+path] = r.routeChain(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		callFunc(&Context{Writer: w, Request: req})
 	})).ServeHTTP
 }
 
 func (r *RouteStruct) Post(path string, callFunc func(c *Context)) {
-	postRoutes[r.perfix+path] = r.chain(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+	postRoutes[r.perfix+path] = r.routeChain(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		callFunc(&Context{Writer: w, Request: req})
+	})).ServeHTTP
+}
+
+func (r *RouteStruct) Patch(path string, callFunc func(c *Context)) {
+	patchRoutes[r.perfix+path] = r.routeChain(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		callFunc(&Context{Writer: w, Request: req})
+	})).ServeHTTP
+}
+
+func (r *RouteStruct) Delete(path string, callFunc func(c *Context)) {
+	deleteRoutes[r.perfix+path] = r.routeChain(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		callFunc(&Context{Writer: w, Request: req})
+	})).ServeHTTP
+}
+
+func (r *RouteStruct) Put(path string, callFunc func(c *Context)) {
+	putRoutes[r.perfix+path] = r.routeChain(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		callFunc(&Context{Writer: w, Request: req})
+	})).ServeHTTP
+}
+
+func (r *RouteStruct) Options(path string, callFunc func(c *Context)) {
+	optionsRoutes[r.perfix+path] = r.routeChain(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		callFunc(&Context{Writer: w, Request: req})
+	})).ServeHTTP
+}
+
+func (r *RouteStruct) Head(path string, callFunc func(c *Context)) {
+	headRoutes[r.perfix+path] = r.routeChain(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		callFunc(&Context{Writer: w, Request: req})
+	})).ServeHTTP
+}
+
+func (r *RouteStruct) Any(path string, callFunc func(c *Context)) {
+	r.Get(path, callFunc)
+	r.Post(path, callFunc)
+	r.Patch(path, callFunc)
+	r.Delete(path, callFunc)
+	r.Put(path, callFunc)
+	r.Options(path, callFunc)
+	r.Head(path, callFunc)
+}
+
+func (r *RouteStruct) Websocket(path string, callFunc func(websocket *WebSocket)) {
+	websocket := NewWebSocketConfig()
+	
+	websocketRoutes[r.perfix+path] = r.routeChain(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		conn, err := websocket.Upgrader.Upgrade(w, req, nil)
+		if err != nil {
+			fmt.Println("WebSocket upgrade error:", err)
+			return
+		}
+		defer conn.Close()
+		
+		callFunc(&WebSocket{ Request: req, Conn: conn })
 	})).ServeHTTP
 }
 
@@ -64,10 +149,12 @@ func (r *RouteStruct) Use(middleware func(c *Context, next http.HandlerFunc)) {
 	})
 }
 
-func (r *RouteStruct) chain(handler http.Handler) http.Handler {
+func (r *RouteStruct) routeChain(handler http.Handler) http.Handler {
 	for i := len(r.middlewares) - 1; i >= 0; i-- {
 		handler = r.middlewares[i](handler)
 	}
+
+	settings := GetSettingsConfig()
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
@@ -76,8 +163,6 @@ func (r *RouteStruct) chain(handler http.Handler) http.Handler {
 				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			}
 		}()
-
-		settings := GetSettingsConfig()
 
 		maxBytesMemory, err := settings.GetMaxBytesMemory()
 		if err != nil {
@@ -124,5 +209,33 @@ func (r *RouteStruct) chain(handler http.Handler) http.Handler {
 		handler.ServeHTTP(w, r.WithContext(ctx))
 
 		fmt.Printf("[%s] %s %s ... %v\n", time.Now().Format("2006-01-02 15:04:05"), r.Method, r.URL.Path, time.Since(timeStart))
+	})
+}
+
+func (r *RouteStruct) websocketChain(handler http.Handler) http.Handler {
+	for i := len(r.middlewares) - 1; i >= 0; i-- {
+		handler = r.middlewares[i](handler)
+	}
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			if err := recover(); err != nil {
+				fmt.Printf("Panic recovered: %v\n", err)
+				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			}
+		}()
+
+		id := r.Header.Get("X-Request-ID")
+		if id == "" {
+			id = uuid.New().String()
+		}
+		ctx := context.WithValue(r.Context(), "requestID", id)
+		w.Header().Set("X-Request-ID", id)
+
+		timeStart := time.Now()
+
+		handler.ServeHTTP(w, r.WithContext(ctx))
+
+		fmt.Printf("[%s] WebSocket %s ... %v\n", time.Now().Format("2006-01-02 15:04:05"), r.URL.Path, time.Since(timeStart))
 	})
 }

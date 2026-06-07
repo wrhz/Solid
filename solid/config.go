@@ -2,6 +2,7 @@ package solid
 
 import (
 	"crypto/tls"
+	"net/http"
 	"os"
 	"strconv"
 
@@ -180,4 +181,18 @@ func (s *SettingsConfigStruct) GetSessionStore() sessions.Store {
 
 func GetSettingsConfig() *SettingsConfigStruct {
 	return settings
+}
+
+type WebSocketConfigStruct struct {
+	Upgrader *Upgrader
+}
+
+func NewWebSocketConfig() *WebSocketConfigStruct {
+	upgrader := &Upgrader{
+		CheckOrigin: func(r *http.Request) bool {
+			return true
+		},
+	}
+
+	return &WebSocketConfigStruct{Upgrader: upgrader}
 }

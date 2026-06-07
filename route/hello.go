@@ -1,11 +1,15 @@
 package route
 
-import "solid/solid"
+import (
+	"fmt"
+	"solid/solid"
+)
 
 type Hello struct{}
 
 func (h *Hello) RegisterRoute(r *solid.RouteStruct) {
 	r.Get("/hello", h.helloGet)
+	r.Websocket("/ws", h.wsWebSocket)
 }
 
 func (h *Hello) Init(r *solid.RouteStruct) {
@@ -17,7 +21,27 @@ func (h *Hello) RegisterMiddleware(r *solid.RouteStruct) {
 }
 
 func (h *Hello) helloGet(c *solid.Context) {
-	solid.StringResponse(c, "Hello, World!", 200)
+	solid.ViewResponse(c, "index.html", 200)
+}
+
+func (h *Hello) wsWebSocket(websocket *solid.WebSocket) {
+	for {
+		_, message, err := websocket.ReadMessage()
+
+		if err != nil {
+			fmt.Println("Error reading message:", err)
+			break
+		}
+
+		fmt.Printf("Received message: %s\n", message)
+
+		err = websocket.WriteMessage(1, []byte("Hello from WebSocket!"))
+
+		if err != nil {
+			fmt.Println("Error writing message:", err)
+			break
+		}
+	}
 }
 
 func NewHello() *Hello {
