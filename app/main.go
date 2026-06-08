@@ -18,6 +18,12 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
+func handleConfigs() {
+	config.ServerConfig()
+	config.SettingsConfig()
+	config.WebSocketConfig()
+}
+
 func handleRoutes(serve *mux.Router) {
 	for path, callFunc := range solid.GetRoutes() {
 		serve.Handle(path, gziphandler.GzipHandler(http.HandlerFunc(callFunc))).Methods("GET")
@@ -53,9 +59,7 @@ func handleRoutes(serve *mux.Router) {
 }
 
 func main() {
-	config.ServerConfig()
-
-	config.SettingsConfig()
+	handleConfigs()
 
 	serverConfig := solid.GetServerConfig()
 
@@ -74,6 +78,12 @@ func main() {
 	serve.PathPrefix("/static/").Handler(
 		gziphandler.GzipHandler(
 			http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))),
+		),
+	)
+
+	serve.PathPrefix("/js/").Handler(
+		gziphandler.GzipHandler(
+			http.StripPrefix("/js/", http.FileServer(http.Dir("./resource/js"))),
 		),
 	)
 

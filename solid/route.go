@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/gorilla/websocket"
 )
 
 type RouteStruct struct {
@@ -120,17 +121,35 @@ func (r *RouteStruct) Any(path string, callFunc func(c *Context)) {
 }
 
 func (r *RouteStruct) Websocket(path string, callFunc func(websocket *WebSocket)) {
-	websocket := NewWebSocketConfig()
+	websocketConfig := GetWebSocketConfig()
 	
-	websocketRoutes[r.perfix+path] = r.routeChain(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		conn, err := websocket.Upgrader.Upgrade(w, req, nil)
+	websocketRoutes[r.perfix+path] = r.websocketChain(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		conn, err := websocketConfig.Upgrader.Upgrade(w, req, nil)
 		if err != nil {
 			fmt.Println("WebSocket upgrade error:", err)
 			return
 		}
-		defer conn.Close()
+
+		websocketStruct := &WebSocket{ Request: req, Conn: conn, isClosed: false }
 		
-		callFunc(&WebSocket{ Request: req, Conn: conn })
+		defer websocketStruct.Close()
+
+		ticker := time.NewTicker(time.Duration(websocketConfig.GetPingInterval()) * time.Second)
+
+		defer ticker.Stop()
+
+		go func() {
+			for range ticker.C {
+				err := conn.WriteControl(websocket.PingMessage, []byte{}, time.Now().Add(time.Duration(websocketConfig.GetPongWait()) * time.Second))
+				if err != nil {
+					fmt.Println("WebSocket ping error:", err)
+					websocketStruct.Close()
+					return
+				}
+			}
+		}()
+
+		callFunc(websocketStruct)
 	})).ServeHTTP
 }
 
@@ -232,10 +251,8 @@ func (r *RouteStruct) websocketChain(handler http.Handler) http.Handler {
 		ctx := context.WithValue(r.Context(), "requestID", id)
 		w.Header().Set("X-Request-ID", id)
 
-		timeStart := time.Now()
+		fmt.Printf("[%s] WebSocket %s\n", time.Now().Format("2006-01-02 15:04:05"), r.URL.Path)
 
 		handler.ServeHTTP(w, r.WithContext(ctx))
-
-		fmt.Printf("[%s] WebSocket %s ... %v\n", time.Now().Format("2006-01-02 15:04:05"), r.URL.Path, time.Since(timeStart))
 	})
 }

@@ -25,7 +25,7 @@ func (h *Hello) helloGet(c *solid.Context) {
 }
 
 func (h *Hello) wsWebSocket(websocket *solid.WebSocket) {
-	for {
+	for !websocket.IsClosed() {
 		_, message, err := websocket.ReadMessage()
 
 		if err != nil {

@@ -8,8 +8,20 @@ import (
 )
 
 type WebSocket struct {
-	Request *http.Request
 	*websocket.Conn
+
+	Request *http.Request
+
+	isClosed bool
+}
+
+func (ws *WebSocket) Close() error {
+	ws.isClosed = true
+	return ws.Conn.Close()
+}
+
+func (ws *WebSocket) IsClosed() bool {
+	return ws.isClosed
 }
 
 type Upgrader struct {

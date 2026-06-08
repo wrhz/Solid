@@ -11,6 +11,7 @@ import (
 
 var serverConfig = NewServerConfig()
 var settings = NewSettingsConfig()
+var websocketConfig = NewWebSocketConfig()
 
 type ServerConfigStruct struct {
 	host       string
@@ -185,6 +186,25 @@ func GetSettingsConfig() *SettingsConfigStruct {
 
 type WebSocketConfigStruct struct {
 	Upgrader *Upgrader
+
+	pingInterval int
+	pongWait     int
+}
+
+func (w *WebSocketConfigStruct) SetPingInterval(pingInterval int) {
+	w.pingInterval = pingInterval
+}
+
+func (w *WebSocketConfigStruct) SetPongWait(pongWait int) {
+	w.pongWait = pongWait
+}
+
+func (w *WebSocketConfigStruct) GetPingInterval() int {
+	return w.pingInterval
+}
+
+func (w *WebSocketConfigStruct) GetPongWait() int {
+	return w.pongWait
 }
 
 func NewWebSocketConfig() *WebSocketConfigStruct {
@@ -194,5 +214,13 @@ func NewWebSocketConfig() *WebSocketConfigStruct {
 		},
 	}
 
-	return &WebSocketConfigStruct{Upgrader: upgrader}
+	return &WebSocketConfigStruct{
+		Upgrader: upgrader,
+		pingInterval: 10,
+		pongWait: 5,
+	}
+}
+
+func GetWebSocketConfig() *WebSocketConfigStruct {
+	return websocketConfig
 }

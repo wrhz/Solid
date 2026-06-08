@@ -6,18 +6,20 @@
     <title>WebSocket Test</title>
 </head>
 <body>
-    <script>
-        const socket = new WebSocket('ws://localhost:8000/ws');
+    <script type="module">
+        import SolidWebSocket from '/js/websocket.js';
 
-        socket.onopen = function(event) {
+        const socket = new SolidWebSocket('/ws');
+
+        socket.on("open", function(event) {
             console.log('WebSocket connection opened');
 
             socket.send('Hello, Server!');
-        };
+        });
 
-        socket.onmessage = function(event) {
+        socket.on('message', function(event) {
             console.log('Message from server:', event.data);
-        };
+        });
     </script>
 </body>
 </html>
