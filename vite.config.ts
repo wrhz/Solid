@@ -1,21 +1,24 @@
 import { defineConfig } from 'vite'
 import fg from 'fast-glob'
 import path from 'path'
-import { execSync } from 'child_process'
+import vue from '@vitejs/plugin-vue'
+import react from '@vitejs/plugin-react'
 
 export default defineConfig({
+  plugins: [vue(), react()],
+  define: {
+    'process.env.NODE_ENV': JSON.stringify(
+      process.env.NODE_ENV || 'production'
+    )
+  },
   resolve: {
     "alias": {
-      "@": "/lib"
+      "@": "/resource/lib"
     }
   },
   build: {
     lib: {
-      entry: getEntries(
-        'resource/lib/**/*.{js,ts}',
-        'static/js/**/*{.js,ts}',
-        'static/ts/**/*{.js,ts}'
-      ),
+      entry: getEntries('resource/**/*.{js,ts,jsx,tsx}'),
       formats: ['es']
     },
     rollupOptions: {

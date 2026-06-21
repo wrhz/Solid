@@ -43,6 +43,6 @@
     "checkJs": true,
     "paths": {
         "@/*": ["./resource/lib/*"]
-    }
+    },
   }
 }

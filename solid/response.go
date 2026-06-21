@@ -40,13 +40,41 @@ func HtmlResponse(c *Context, html string, status int) {
 	fmt.Fprintf(c.Writer, "%s", html)
 }
 
-func ViewResponse(c *Context, file string, status int) {
-	var html, err = os.ReadFile(filepath.Join(".", "resource", "view", file))
+func HtmlViewResponse(c *Context, file string, status int) {
+	var html, err = os.ReadFile(filepath.Join(".", "resource", "view", file + ".html"))
 	if err != nil {
 		c.Writer.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintf(c.Writer, "Failed to read html file: %s", err)
 		return
 	}
+	c.Writer.Header().Set("Content-Type", "text/html")
+	c.Writer.WriteHeader(status)
+
+	fmt.Fprintf(c.Writer, "%s", html)
+}
+
+func VueViewResponse(c *Context, group string, status int) {
+	var html, err = os.ReadFile(filepath.Join(".", "resource", "vue", group, group + ".html"))
+	if err != nil {
+		c.Writer.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(c.Writer, "Failed to read html file: %s", err)
+		return
+	}
+
+	c.Writer.Header().Set("Content-Type", "text/html")
+	c.Writer.WriteHeader(status)
+
+	fmt.Fprintf(c.Writer, "%s", html)
+}
+
+func ReactViewResponse(c *Context, group string, status int) {
+	var html, err = os.ReadFile(filepath.Join(".", "resource", "react", group, group + ".html"))
+	if err != nil {
+		c.Writer.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(c.Writer, "Failed to read html file: %s", err)
+		return
+	}
+
 	c.Writer.Header().Set("Content-Type", "text/html")
 	c.Writer.WriteHeader(status)
 
