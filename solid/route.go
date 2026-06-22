@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"runtime/debug"
 	"strings"
 	"time"
 
@@ -37,12 +38,29 @@ func routeRequestStart(ctx *Context) {
 	id := ctx.RequestID()
 
 	if id != "" {
-		GormDatabasesManager.Set(id)
+		if IsStartGorm() {
+			GormDatabasesManager.Set(id)
 
-		db, ok := GormDatabasesManager.Get(id)
+			db, ok := GormDatabasesManager.Get(id)
 
-		if ok {
-			ctx.SetGormDatabase(db)
+			if ok {
+				ctx.SetGormDatabase(db)
+			}
+		}
+
+		if IsStartXorm() {
+			err := XormSessionsManager.Set(id)
+
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+
+			session, ok := XormSessionsManager.Get(id)
+
+			if ok {
+				ctx.SetXormSession(session)
+			}
 		}
 	}
 }
@@ -52,21 +70,41 @@ func routeRequestEnd(ctx *Context, err error) {
 
 	if id == "" { return }
 
-	tx, ok := GormDatabasesManager.Get(id)
+	if IsStartGorm() {
+		tx, ok := GormDatabasesManager.Get(id)
 
-	if !ok { return }
+		if !ok { return }
 
-	if err == nil {
-		if err := tx.Commit().Error; err != nil {
-			log.Fatal("Commit error:", err)
+		if err == nil {
+			if err = tx.Commit().Error; err != nil {
+				log.Fatal("Commit error:", err)
+			}
+		} else {
+			if err = tx.Rollback().Error; err != nil {
+				log.Fatal("‌Rollback error:", err)
+			}
 		}
-	} else {
-		if err := tx.Rollback().Error; err != nil {
-			log.Fatal("‌Rollback error:", err)
-		}
+
+		GormDatabasesManager.Delete(id)
 	}
 
-	GormDatabasesManager.Delete(id)
+	if IsStartXorm() {
+		session, ok := XormSessionsManager.Get(id)
+
+		if !ok { return }
+
+		if err == nil {
+			if err = session.Commit(); err != nil {
+				log.Fatal("Commit error:", err)
+			}
+		} else {
+			if err = session.Rollback(); err != nil {
+				log.Fatal("‌Rollback error:", err)
+			}
+		}
+
+		XormSessionsManager.Delete(id)
+	}
 }
 
 func GetRoutes() map[string]func(w http.ResponseWriter, r *http.Request) {
@@ -247,6 +285,7 @@ func (r *RouteStruct) routeChain(handler http.Handler) http.Handler {
 			if err := recover(); err != nil {
 				fmt.Printf("Panic recovered: %v\n", err)
 				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+				debug.PrintStack()
 
 				if !ok { return }
 

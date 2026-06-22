@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"gorm.io/gorm"
+	"xorm.io/xorm"
 )
 
 type Context struct {
@@ -11,6 +12,7 @@ type Context struct {
 	Request *http.Request
 
 	gormDatabase *gorm.DB
+	xormSession *xorm.Session
 }
 
 func (c *Context) RequestID() string {
@@ -27,4 +29,12 @@ func (c *Context) SetGormDatabase(db *gorm.DB) {
 
 func  (c *Context) GetGormDatabase() *gorm.DB {
 	return c.gormDatabase
+}
+
+func (c *Context) SetXormSession(session *xorm.Session) {
+	c.xormSession = session
+}
+
+func (c *Context) GetXormSession() *xorm.Session {
+	return c.xormSession
 }

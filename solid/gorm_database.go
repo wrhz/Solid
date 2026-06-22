@@ -1,7 +1,6 @@
 package solid
 
 import (
-	"fmt"
 	"sync"
 
 	"gorm.io/gorm"
@@ -35,32 +34,34 @@ func (g *GormDatabasesManagerStruct) Delete(requestID string) {
 func InitGorm() error {
 	databaseConfig := GetDatabaseConfig()
 
-	if gormDialector := databaseConfig.GetGormDialector(); gormDialector != nil {
+	gormDialector := databaseConfig.GetGormDialector()
+
+	if gormDialector != nil {
 		var err error
 
 		gormOptions := databaseConfig.GetGormOptions()
 		gormDatabase, err = gorm.Open(gormDialector, gormOptions...)
 
-		if err != nil {
-			return err
-		}
+		return err
 	}
 
 	return nil
 }
 
 func RemoveGorm() error {
-	if gormDatabase != nil {
+	if IsStartGorm() {
 		sqlDB, err := gormDatabase.DB()
 
 		if err != nil {
 			sqlDB.Close()
-
-			fmt.Println("close")
 		} else {
 			return nil
 		}
 	}
 
 	return nil
+}
+
+func IsStartGorm() bool {
+	return gormDatabase != nil
 }

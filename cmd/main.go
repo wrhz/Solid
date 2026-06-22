@@ -81,6 +81,10 @@ func serverFinish() {
 	if err := solid.RemoveGorm(); err != nil {
 		fmt.Printf("Remove GORM error: %v\n", err)
 	}
+
+	if err := solid.RemoveXorm(); err != nil {
+		fmt.Printf("Remove XORM error: %v\n", err)
+	}
 }
 
 func main() {
@@ -102,7 +106,19 @@ func main() {
 
 	handleStatic(serve)
 
-	solid.InitGorm()
+	err := solid.InitGorm()
+
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	err = solid.InitXorm()
+
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 
 	fmt.Println("Server starting on port:", serverConfig.GetPort())
 
