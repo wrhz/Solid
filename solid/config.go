@@ -231,11 +231,13 @@ func GetWebSocketConfig() *WebSocketConfigStruct {
 type DatabaseConfigStruct struct {
 	gormDialector gorm.Dialector
 	gormOptions []gorm.Option
+	gormModels []any
 
 	xormDriverName string
 	xormDataSourceName string
 	xormDriverOptions []func(db *sql.DB) error
 	xormShowSQL bool
+	xormModels []any
 }
 
 func (d *DatabaseConfigStruct) SetGormDialector(dialector gorm.Dialector) {
@@ -252,6 +254,14 @@ func (d *DatabaseConfigStruct) GetGormDialector() gorm.Dialector {
 
 func (d *DatabaseConfigStruct) GetGormOptions() []gorm.Option {
 	return d.gormOptions
+}
+
+func (d *DatabaseConfigStruct) RegisterGormModels(models ...any) {
+	d.gormModels = append(d.gormModels, models...)
+}
+
+func (d *DatabaseConfigStruct) GetGormModels() []any {
+	return d.gormModels
 }
 
 func (d *DatabaseConfigStruct) GetXormDriverName() string {
@@ -284,6 +294,14 @@ func (d *DatabaseConfigStruct) SetXormShowSQL(showSQL bool) {
 
 func (d *DatabaseConfigStruct) GetXormShowSQL() bool {
 	return d.xormShowSQL
+}
+
+func (d *DatabaseConfigStruct) RegisterXormModels(models ...any) {
+	d.xormModels = append(d.xormModels, models...)
+}
+
+func (d *DatabaseConfigStruct) GetXormModels() []any {
+	return d.xormModels
 }
 
 func NewDatabaseConfig() *DatabaseConfigStruct {

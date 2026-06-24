@@ -62,6 +62,16 @@ func RemoveGorm() error {
 	return nil
 }
 
+func MigrateModels() error {
+	if IsStartGorm() {
+		databaseConfig := GetDatabaseConfig()
+
+		return gormDatabase.AutoMigrate(databaseConfig.GetGormModels()...)
+	}
+
+	return nil
+}
+
 func IsStartGorm() bool {
 	return gormDatabase != nil
 }

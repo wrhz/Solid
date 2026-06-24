@@ -77,6 +77,16 @@ func RemoveXorm() error {
 	return nil
 }
 
+func SyncModels() error {
+	if IsStartXorm() {
+		databaseConfig := GetDatabaseConfig()
+
+		return xormEngine.Sync2(databaseConfig.GetXormModels()...)
+	}
+
+	return nil
+}
+
 func IsStartXorm() bool {
 	return xormEngine != nil
 }

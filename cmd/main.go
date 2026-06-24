@@ -77,6 +77,18 @@ func handleStatic(serve *mux.Router) {
 	)
 }
 
+func migrateModels() error {
+	if err := solid.MigrateModels(); err != nil {
+		return err
+	}
+
+	if err := solid.SyncModels(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func serverFinish() {
 	if err := solid.RemoveGorm(); err != nil {
 		fmt.Printf("Remove GORM error: %v\n", err)
@@ -117,6 +129,11 @@ func main() {
 
 	if err != nil {
 		fmt.Println(err)
+		return
+	}
+
+	if err = migrateModels(); err != nil {
+		fmt.Println("Migrate Models error: ", err)
 		return
 	}
 
