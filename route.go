@@ -34,6 +34,16 @@ var optionsRoutes = map[string]func(w http.ResponseWriter, r *http.Request) {}
 var headRoutes = map[string]func(w http.ResponseWriter, r *http.Request) {}
 var websocketRoutes = map[string]func(w http.ResponseWriter, r *http.Request) {}
 
+func routeFuncHandle(path string, callFunc func(c *Context) error) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		ctx := &Context{Writer: w, Request: req}
+
+		routeRequestStart(ctx)
+		
+		routeRequestEnd(ctx, callFunc(ctx))
+	})
+}
+
 func routeRequestStart(ctx *Context) {
 	id := ctx.RequestID()
 
@@ -144,73 +154,31 @@ func NewRoute() *RouteStruct {
 }
 
 func (r *RouteStruct) Get(path string, callFunc func(c *Context) error) {
-	getRoutes[r.perfix+path] = r.routeChain(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		ctx := &Context{Writer: w, Request: req}
-
-		routeRequestStart(ctx)
-		
-		routeRequestEnd(ctx, callFunc(ctx))
-	})).ServeHTTP
+	getRoutes[r.perfix+path] = r.routeChain(routeFuncHandle(path, callFunc)).ServeHTTP
 }
 
 func (r *RouteStruct) Post(path string, callFunc func(c *Context) error) {
-	postRoutes[r.perfix+path] = r.routeChain(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		ctx := &Context{Writer: w, Request: req}
-		
-		routeRequestStart(ctx)
-		
-		routeRequestEnd(ctx, callFunc(ctx))
-	})).ServeHTTP
+	postRoutes[r.perfix+path] = r.routeChain(routeFuncHandle(path, callFunc)).ServeHTTP
 }
 
 func (r *RouteStruct) Patch(path string, callFunc func(c *Context) error) {
-	patchRoutes[r.perfix+path] = r.routeChain(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		ctx := &Context{Writer: w, Request: req}
-		
-		routeRequestStart(ctx)
-		
-		routeRequestEnd(ctx, callFunc(ctx))
-	})).ServeHTTP
+	patchRoutes[r.perfix+path] = r.routeChain(routeFuncHandle(path, callFunc)).ServeHTTP
 }
 
 func (r *RouteStruct) Delete(path string, callFunc func(c *Context) error) {
-	deleteRoutes[r.perfix+path] = r.routeChain(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		ctx := &Context{Writer: w, Request: req}
-		
-		routeRequestStart(ctx)
-		
-		routeRequestEnd(ctx, callFunc(ctx))
-	})).ServeHTTP
+	deleteRoutes[r.perfix+path] = r.routeChain(routeFuncHandle(path, callFunc)).ServeHTTP
 }
 
 func (r *RouteStruct) Put(path string, callFunc func(c *Context) error) {
-	putRoutes[r.perfix+path] = r.routeChain(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		ctx := &Context{Writer: w, Request: req}
-		
-		routeRequestStart(ctx)
-		
-		routeRequestEnd(ctx, callFunc(ctx))
-	})).ServeHTTP
+	putRoutes[r.perfix+path] = r.routeChain(routeFuncHandle(path, callFunc)).ServeHTTP
 }
 
 func (r *RouteStruct) Options(path string, callFunc func(c *Context) error) {
-	optionsRoutes[r.perfix+path] = r.routeChain(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		ctx := &Context{Writer: w, Request: req}
-		
-		routeRequestStart(ctx)
-		
-		routeRequestEnd(ctx, callFunc(ctx))
-	})).ServeHTTP
+	optionsRoutes[r.perfix+path] = r.routeChain(routeFuncHandle(path, callFunc)).ServeHTTP
 }
 
 func (r *RouteStruct) Head(path string, callFunc func(c *Context) error) {
-	headRoutes[r.perfix+path] = r.routeChain(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		ctx := &Context{Writer: w, Request: req}
-		
-		routeRequestStart(ctx)
-		
-		routeRequestEnd(ctx, callFunc(ctx))
-	})).ServeHTTP
+	headRoutes[r.perfix+path] = r.routeChain(routeFuncHandle(path, callFunc)).ServeHTTP
 }
 
 func (r *RouteStruct) Any(path string, callFunc func(c *Context) error) {
