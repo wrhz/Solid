@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"net/http"
 	"os"
@@ -15,6 +16,16 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/wrhz/Solid"
 )
+
+func parseFlags() {
+	serverConfig := solid.GetServerConfig()
+	
+	debug := flag.Bool("debug", false, "enable debug mode")
+
+	flag.Parse()
+
+	serverConfig.SetDebug(*debug)
+}
 
 func handleConfigs() {
 	config.ServerConfig()
@@ -100,9 +111,13 @@ func serverFinish() {
 }
 
 func main() {
+	parseFlags()
+
 	handleConfigs()
 
 	serverConfig := solid.GetServerConfig()
+
+	debug := serverConfig.GetDebug()
 
 	serve := mux.NewRouter()
 
@@ -132,9 +147,11 @@ func main() {
 		return
 	}
 
-	if err = migrateModels(); err != nil {
-		fmt.Println("Migrate Models error: ", err)
-		return
+	if debug {
+		if err = migrateModels(); err != nil {
+			fmt.Println("Migrate Models error: ", err)
+			return
+		}
 	}
 
 	fmt.Println("Server starting on port:", serverConfig.GetPort())

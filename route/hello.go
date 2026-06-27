@@ -1,6 +1,10 @@
 package route
 
-import "github.com/wrhz/Solid"
+import (
+	"fmt"
+
+	"github.com/wrhz/Solid"
+)
 
 type Hello struct{}
 
@@ -17,6 +21,8 @@ func (h *Hello) RegisterMiddleware(r *solid.RouteStruct) {
 }
 
 func (h *Hello) helloGet(c *solid.Context) error {
+	fmt.Println(solid.GetServerConfig().GetDebug())
+
 	return solid.HtmlViewResponse(c, "index", 200)
 }
 
