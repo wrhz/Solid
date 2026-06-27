@@ -18,34 +18,27 @@ var createModelCmd = &cobra.Command{
 	Use:   "createModel",
 	Short: "You can use it to create a database model for your solid project",
 	Args:  cobra.MinimumNArgs(1),
-	Run: createModel,
+	RunE: createModel,
 }
 
-func createModel(cmd *cobra.Command, args []string) {
+func createModel(cmd *cobra.Command, args []string) error {
 	if orm != "gorm" && orm != "xorm" && orm != "both" {
-		fmt.Println("The orm only can be gorm or xorm or both, are not " + orm)
-
-		return
+		return fmt.Errorf("The orm only can be gorm or xorm or both, are not " + orm)
 	}
 
 	modelName := strcase.ToCamel(args[0])
 	
 	if err := os.MkdirAll("./model", 0755); err != nil {
-		fmt.Println("Create directory error:", err)
-
-		return
+		return err
 	}
 
 	f, err := os.OpenFile(filepath.Join("model", modelName + ".go"), os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0644)
 	if err != nil {
 		if os.IsExist(err) {
-			fmt.Println("The file is exist")
-
-			return
+			return fmt.Errorf("The file is exist")
 		}
-		fmt.Println("Create file error: %w", err)
 
-		return
+		return err
 	}
 	defer f.Close()
 
@@ -70,8 +63,10 @@ type %s struct {
 }`, modelName, tag)
 
 	if _, err := f.Write([]byte(data)); err != nil {
-		fmt.Println("Write file error: %w", err)
+		return err
 	}
+
+	return nil
 }
 
 func init() {
