@@ -17,6 +17,8 @@ import (
 	"github.com/wrhz/Solid"
 )
 
+var mainStruct solid.SolidMainRoute
+
 func parseFlags() {
 	serverConfig := solid.GetServerConfig()
 	
@@ -101,6 +103,8 @@ func migrateModels() error {
 }
 
 func serverFinish() {
+	mainStruct.ServerEnd()
+
 	if err := solid.RemoveGorm(); err != nil {
 		fmt.Printf("Remove GORM error: %v\n", err)
 	}
@@ -123,11 +127,13 @@ func main() {
 
 	route := solid.NewRoute()
 
-	serverConfig.GetMainStruct().Init(route)
+	mainStruct := serverConfig.GetMainStruct()
 
-	serverConfig.GetMainStruct().RegisterMiddleware(route)
+	mainStruct.Init(route)
 
-	serverConfig.GetMainStruct().RegisterRoute(route)
+	mainStruct.RegisterMiddleware(route)
+
+	mainStruct.RegisterRoute(route)
 
 	handleRoutes(serve)
 
@@ -165,18 +171,19 @@ func main() {
 		server.TLSConfig = tlsConfig
 	}
 
-	if certFile := solid.GetServerConfig().GetTLSCertFile(); certFile != "" {
-		keyFile := solid.GetServerConfig().GetTLSKeyFile()
-
-		if err := server.ListenAndServeTLS("./certs/" + certFile, "./certs/" + keyFile); err != nil {
-			fmt.Println("Server failed:", err)
-		}
-		return
-	}
-
 	go func ()  {
-		if err := server.ListenAndServe(); err != nil {
-			fmt.Println("Server failed:", err)
+		mainStruct.ServerStart()
+
+		if certFile := solid.GetServerConfig().GetTLSCertFile(); certFile != "" {
+			keyFile := solid.GetServerConfig().GetTLSKeyFile()
+
+			if err := server.ListenAndServeTLS("./certs/" + certFile, "./certs/" + keyFile); err != nil {
+				fmt.Println("Server failed:", err)
+			}
+		} else {
+			if err := server.ListenAndServe(); err != nil {
+				fmt.Println("Server failed:", err)
+			}
 		}
 	}()
 
